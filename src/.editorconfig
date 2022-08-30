@@ -362,3 +362,9 @@ dotnet_naming_style.s_camelcase.required_suffix =
 dotnet_naming_style.s_camelcase.word_separator = 
 dotnet_naming_style.s_camelcase.capitalization = camel_case
 
+# Custom configuration
+[*.cs]
+max_line_length = off
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
