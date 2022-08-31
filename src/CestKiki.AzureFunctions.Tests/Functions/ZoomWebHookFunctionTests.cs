@@ -55,7 +55,7 @@ public class ZoomWebHookFunctionTests
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        _loggerMock.VerifyLog(LogLevel.Error, "Invalid message signature. Headers: 'key: value\r\n'");
+        _loggerMock.VerifyLog(LogLevel.Error, "Invalid message signature");
     }
 
     [Theory]
@@ -75,14 +75,14 @@ public class ZoomWebHookFunctionTests
     }
 
     [Theory]
-    [InlineData(@"{""event"":""foo""}", "Zoom event 'foo' is not supported")]
-    [InlineData(@"{""event"":""invalid"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915330}", "Zoom event 'invalid' is not supported")]
-    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915330}", "UserId is null")]
-    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915330}", "Username is null")]
-    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""topic"":""meeting topic""}},""event_ts"":1659893915330}", "RoomId is null")]
-    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321""}},""event_ts"":1659893915330}", "RoomTopic is null")]
-    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}}}", "Timestamp is null")]
-    public async Task Run_MissingJsonContent_BadRequest(string body, string expectedError)
+    [InlineData(@"{""event"":""foo""}", "foo", "Zoom event 'foo' is not supported")]
+    [InlineData(@"{""event"":""invalid"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915330}", "invalid", "Zoom event 'invalid' is not supported")]
+    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915330}", "meeting.sharing_started", "UserId is null")]
+    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915330}", "meeting.sharing_started", "Username is null")]
+    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""topic"":""meeting topic""}},""event_ts"":1659893915330}", "meeting.sharing_started", "RoomId is null")]
+    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321""}},""event_ts"":1659893915330}", "meeting.sharing_started", "RoomTopic is null")]
+    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}}}", "meeting.sharing_started", "Timestamp is null")]
+    public async Task Run_MissingJsonContent_BadRequest(string body, string expectedEventName, string expectedErrorMessage)
     {
         // Arrange
         var requestMock = RequestHelper.CreateMock(body);
@@ -92,14 +92,14 @@ public class ZoomWebHookFunctionTests
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        _loggerMock.VerifyLog<ZoomWebHookFunction, InvalidOperationException>(LogLevel.Error, "Error storing Zoom event", _ => _.Message == expectedError);
+        _loggerMock.VerifyLog<ZoomWebHookFunction, InvalidOperationException>(LogLevel.Error, $"Error while processing Zoom event '{expectedEventName}'", _ => _.Message == expectedErrorMessage);
     }
 
     [Theory]
-    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""999999999"",""topic"":""meeting topic""}},""event_ts"":1659893915330}")]
-    [InlineData(@"{""event"":""meeting.sharing_ended"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""999999999"",""topic"":""meeting topic""}},""event_ts"":1659893915330}")]
-    [InlineData(@"{""event"":""meeting.participant_left"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""999999999"",""topic"":""meeting topic""}},""event_ts"":1659893915330}")]
-    public async Task Run_NonMonitoredRoom_Ok(string body)
+    [InlineData(@"{""event"":""meeting.sharing_started"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""999999999"",""topic"":""meeting topic""}},""event_ts"":1659893915330}", "meeting.sharing_started")]
+    [InlineData(@"{""event"":""meeting.sharing_ended"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""999999999"",""topic"":""meeting topic""}},""event_ts"":1659893915330}", "meeting.sharing_ended")]
+    [InlineData(@"{""event"":""meeting.participant_left"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""999999999"",""topic"":""meeting topic""}},""event_ts"":1659893915330}", "meeting.participant_left")]
+    public async Task Run_NonMonitoredRoom_Ok(string body, string expectedEventName)
     {
         // Arrange
         var requestMock = RequestHelper.CreateMock(body);
@@ -109,7 +109,8 @@ public class ZoomWebHookFunctionTests
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        _loggerMock.VerifyLog(LogLevel.Debug, "RoomId '999999999' is not monitored");
+        _loggerMock.VerifyLog(LogLevel.Information, $"Zoom event '{expectedEventName}' received");
+        _loggerMock.VerifyLog(LogLevel.Information, "RoomId '999999999' is not monitored. Event skipped");
     }
 
     [Theory]
@@ -119,6 +120,10 @@ public class ZoomWebHookFunctionTests
         // Arrange
         ConfigureTableClientMock("12345678", "987654321", null);
         var requestMock = RequestHelper.CreateMock(body);
+        ZoomHistoryEntity createdEntity = null!;
+        _tableClientMock
+            .Setup(_ => _.AddEntityAsync(It.IsAny<ZoomHistoryEntity>(), default))
+            .Callback<ZoomHistoryEntity, CancellationToken>(((entity, _) => createdEntity = entity));
 
         // Act
         var response = await _sut.Run(requestMock.Object, requestMock.Object.FunctionContext);
@@ -136,6 +141,8 @@ public class ZoomWebHookFunctionTests
         _tableClientMock.Verify();
         _tableClientMock.Verify(_ => _.AddEntityAsync(It.Is(expectedEntity, new ZoomHistoryEntityComparer()), default));
         _tableClientMock.VerifyNoOtherCalls();
+        _loggerMock.VerifyLog(LogLevel.Information, "Zoom event 'meeting.sharing_started' received");
+        _loggerMock.VerifyLog(LogLevel.Information, $"Adding entity '{createdEntity.RowKey}'");
     }
 
     [Theory]
@@ -143,7 +150,7 @@ public class ZoomWebHookFunctionTests
     public async Task Run_SharingStartedAndExistingSharing_BadRequest(string body)
     {
         // Arrange
-        ConfigureTableClientMock("12345678", "987654321", new ZoomHistoryEntity());
+        ConfigureTableClientMock("12345678", "987654321", new ZoomHistoryEntity { RowKey = "foo" });
         var requestMock = RequestHelper.CreateMock(body);
 
         // Act
@@ -153,19 +160,21 @@ public class ZoomWebHookFunctionTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         _tableClientMock.Verify();
         _tableClientMock.VerifyNoOtherCalls();
-        _loggerMock.VerifyLog<ZoomWebHookFunction, InvalidOperationException>(LogLevel.Error, "Error storing Zoom event", _ => _.Message == "User '12345678' already has a sharing started event on room '987654321'");
+        _loggerMock.VerifyLog(LogLevel.Information, "Zoom event 'meeting.sharing_started' received");
+        _loggerMock.VerifyLog<ZoomWebHookFunction, InvalidOperationException>(LogLevel.Error, "Error while processing Zoom event 'meeting.sharing_started'", _ => _.Message == "User '12345678' has an existing sharing on room '987654321' (entity: 'foo')");
     }
 
     [Theory]
-    [InlineData(@"{""event"":""meeting.sharing_ended"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915331}")]
-    [InlineData(@"{""event"":""meeting.participant_left"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915331}")]
-    public async Task Run_SharingEndedAndExistingSharing_Ok(string body)
+    [InlineData(@"{""event"":""meeting.sharing_ended"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915331}", "meeting.sharing_ended")]
+    [InlineData(@"{""event"":""meeting.participant_left"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915331}", "meeting.participant_left")]
+    public async Task Run_SharingEndedAndExistingSharing_Ok(string body, string expectedEventName)
     {
         // Arrange
         var requestMock = RequestHelper.CreateMock(body);
         var existingEntity = new ZoomHistoryEntity
         {
             ETag = new ETag("foo"),
+            RowKey = "bar",
             RoomId = "987654321",
             UserId = "12345678",
             Username = "Firstname Lastname",
@@ -183,12 +192,14 @@ public class ZoomWebHookFunctionTests
         _tableClientMock.Verify();
         _tableClientMock.Verify(_ => _.UpdateEntityAsync(existingEntity, existingEntity.ETag, TableUpdateMode.Replace, default));
         _tableClientMock.VerifyNoOtherCalls();
+        _loggerMock.VerifyLog(LogLevel.Information, $"Zoom event '{expectedEventName}' received");
+        _loggerMock.VerifyLog(LogLevel.Information, $"Updating entity 'bar'");
     }
 
     [Theory]
-    [InlineData(@"{""event"":""meeting.sharing_ended"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915331}")]
-    [InlineData(@"{""event"":""meeting.participant_left"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915331}")]
-    public async Task Run_SharingEndedAndNoExistingSharing_Ok(string body)
+    [InlineData(@"{""event"":""meeting.sharing_ended"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915331}", "meeting.sharing_ended")]
+    [InlineData(@"{""event"":""meeting.participant_left"",""payload"":{""object"":{""participant"":{""user_id"":""12345678"",""user_name"":""Firstname Lastname""},""id"":""987654321"",""topic"":""meeting topic""}},""event_ts"":1659893915331}", "meeting.participant_left")]
+    public async Task Run_SharingEndedAndNoExistingSharing_Ok(string body, string expectedEventName)
     {
         // Arrange
         var requestMock = RequestHelper.CreateMock(body);
@@ -201,7 +212,8 @@ public class ZoomWebHookFunctionTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         _tableClientMock.Verify();
         _tableClientMock.VerifyNoOtherCalls();
-        _loggerMock.VerifyLog(LogLevel.Error, "User '12345678' has no sharing or multiple sharings active on room '987654321'");
+        _loggerMock.VerifyLog(LogLevel.Information, $"Zoom event '{expectedEventName}' received");
+        _loggerMock.VerifyLog(LogLevel.Warning, "User '12345678' doesn't have a single existing sharing on room '987654321'");
     }
 
     private void ConfigureTableClientMock(string userId, string roomId, ZoomHistoryEntity? entity)

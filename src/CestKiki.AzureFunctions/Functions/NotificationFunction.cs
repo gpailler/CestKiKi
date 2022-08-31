@@ -114,7 +114,7 @@ public class NotificationFunction
 
         if (diff > NotificationThreshold)
         {
-            _logger.LogDebug("Current time is '{currentTime}' and notification is scheduled for '{notificationTime}'", currentTime, notificationTime);
+            _logger.LogInformation("Current time is '{currentTime}' and notification is scheduled for '{notificationTime}'", currentTime, notificationTime);
             return false;
         }
 

@@ -106,7 +106,7 @@ public class NotificationFunctionTests
             var timeZone = DateTimeZoneProviders.Tzdb[_notificationOptions.StandUpTimeZone];
             var expectedCurrentTime = this._clockMock.Object.InZone(timeZone).GetCurrentTimeOfDay().ToTimeOnly().ToTimeSpan();
             var expectedNotificationTime = _notificationOptions.NotificationTime.ToTimeSpan();
-            _loggerMock.VerifyLog(LogLevel.Debug, $"Current time is '{expectedCurrentTime}' and notification is scheduled for '{expectedNotificationTime}'");
+            _loggerMock.VerifyLog(LogLevel.Information, $"Current time is '{expectedCurrentTime}' and notification is scheduled for '{expectedNotificationTime}'");
             _tableClientMock.VerifyNoOtherCalls();
         }
     }

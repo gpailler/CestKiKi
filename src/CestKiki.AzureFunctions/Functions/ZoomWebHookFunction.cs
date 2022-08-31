@@ -43,6 +43,10 @@ namespace CestKiki.AzureFunctions.Functions
             using var streamReader = new StreamReader(request.Body);
             var body = await streamReader.ReadToEndAsync();
 
+            _logger.LogDebug("Function 'ZoomWebHook' called with:\n- Headers: '{headers}'\n- Body: '{body}'",
+                string.Join(", ", request.Headers.Select(_ => $"{_.Key}: {string.Join(", ", _.Value)}")),
+                body);
+
             if (!ValidateSignature(request.Headers, body))
             {
                 return request.CreateResponse(HttpStatusCode.Unauthorized);
@@ -56,6 +60,7 @@ namespace CestKiki.AzureFunctions.Functions
 
             try
             {
+                _logger.LogInformation("Zoom event '{event}' received", zoomHookPayload.Event);
                 switch (zoomHookPayload.Event)
                 {
                     case "meeting.sharing_started":
@@ -73,7 +78,7 @@ namespace CestKiki.AzureFunctions.Functions
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error storing Zoom event");
+                _logger.LogError(ex, "Error while processing Zoom event '{event}'", zoomHookPayload.Event);
             }
 
             return request.CreateResponse(HttpStatusCode.BadRequest);
@@ -103,7 +108,7 @@ namespace CestKiki.AzureFunctions.Functions
         {
             if (!_zoomSignatureHelper.ValidateSignature(headers, body))
             {
-                _logger.LogError("Invalid message signature. Headers: '{headers}'", headers.ToString());
+                _logger.LogError("Invalid message signature");
                 return false;
             }
 
@@ -116,14 +121,14 @@ namespace CestKiki.AzureFunctions.Functions
 
             if (zoomInfo.roomId != _zoomOptions.MonitoredRoom)
             {
-                _logger.LogDebug("RoomId '{roomId}' is not monitored", zoomInfo.roomId);
+                _logger.LogInformation("RoomId '{roomId}' is not monitored. Event skipped", zoomInfo.roomId);
                 return;
             }
 
             var currentUserSharingEntities = await GetCurrentSharingEntitiesAsync(zoomInfo.userId, zoomInfo.roomId);
             if (currentUserSharingEntities.Any())
             {
-                throw new InvalidOperationException($"User '{zoomInfo.userId}' already has a sharing started event on room '{zoomInfo.roomId}'");
+                throw new InvalidOperationException($"User '{zoomInfo.userId}' has an existing sharing on room '{zoomInfo.roomId}' (entity: '{currentUserSharingEntities.First().RowKey}')");
             }
 
             var entity = new ZoomHistoryEntity
@@ -136,6 +141,8 @@ namespace CestKiki.AzureFunctions.Functions
                 RoomName = zoomInfo.roomName,
                 StartSharing = zoomInfo.timestamp
             };
+
+            _logger.LogInformation("Adding entity '{entity}'", entity.RowKey);
             await _tableClient.AddEntityAsync(entity);
         }
 
@@ -145,7 +152,7 @@ namespace CestKiki.AzureFunctions.Functions
 
             if (zoomInfo.roomId != _zoomOptions.MonitoredRoom)
             {
-                _logger.LogDebug("RoomId '{roomId}' is not monitored", zoomInfo.roomId);
+                _logger.LogInformation("RoomId '{roomId}' is not monitored. Event skipped", zoomInfo.roomId);
                 return;
             }
 
@@ -154,11 +161,13 @@ namespace CestKiki.AzureFunctions.Functions
             {
                 var entity = currentUserSharingEntities.Single();
                 entity.EndSharing = zoomInfo.timestamp;
+
+                _logger.LogInformation("Updating entity '{entity}'", entity.RowKey);
                 await _tableClient.UpdateEntityAsync(entity, entity.ETag, TableUpdateMode.Replace);
             }
             else
             {
-                _logger.LogWarning("User '{userId}' has no sharing or multiple sharings active on room '{roomId}'", zoomInfo.userId, zoomInfo.roomId);
+                _logger.LogWarning("User '{userId}' doesn't have a single existing sharing on room '{roomId}'", zoomInfo.userId, zoomInfo.roomId);
             }
         }
 
