@@ -1,0 +1,57 @@
+name: Azure functions workflow
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+env:
+  SRC_PATH: ${{ github.workspace }}\src\
+  # SONAR_TOKEN: ''  # Stored in the Actions secrets
+
+jobs:
+  build:
+    name: Build and Tests ⚙️🧪
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Full history for SonarCube
+
+    - name: Install SonarScanner
+      run: dotnet tool install --global dotnet-sonarscanner
+
+    - name: Install dependencies
+      run: dotnet restore ${{ env.SRC_PATH }}
+
+    - name: Start SonarScanner
+      run: >
+        dotnet sonarscanner begin
+        /o:"gpailler"
+        /k:"gpailler_CestKiKi"
+        /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        /d:sonar.host.url="https://sonarcloud.io"
+        /d:sonar.cs.opencover.reportsPaths="${{ github.workspace }}\coverage.opencover.xml"
+
+    - name: Run build
+      run: >
+        dotnet build ${{ env.SRC_PATH }}
+        --configuration Release
+        --no-restore
+        --no-incremental
+
+    - name: Run tests
+      run: >
+        dotnet test ${{ env.SRC_PATH }}CestKiki.AzureFunctions.Tests\
+        --configuration Release
+        --no-build
+        --collect:"XPlat Code Coverage" 
+        -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+    - name: Stop SonarScanner
+      run: |
+        Move-Item "${{ env.SRC_PATH }}CestKiki.AzureFunctions.Tests\TestResults\*\coverage.opencover.xml" "${{ github.workspace }}" -Force
+        dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
