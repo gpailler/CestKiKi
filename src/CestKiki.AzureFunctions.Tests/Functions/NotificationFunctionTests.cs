@@ -60,8 +60,8 @@ public class NotificationFunctionTests
         // Arrange
         _clockMock.Setup(_ => _.GetCurrentInstant()).Returns(GetInstant(currentDatetimeUtc));
         _notificationOptions.StandUpTimeZone = timeZone;
-        _notificationOptions.StandUpStartTime = TimeOnly.Parse("10:10:00");
-        _notificationOptions.StandUpEndTime = TimeOnly.Parse("10:20:00");
+        _notificationOptions.StandUpStartTime = TimeSpan.Parse("10:10:00");
+        _notificationOptions.StandUpEndTime = TimeSpan.Parse("10:20:00");
 
         // Act
         var interval = _sut.GetStandUpInterval();
@@ -88,7 +88,7 @@ public class NotificationFunctionTests
         // Arrange
         _clockMock.Setup(_ => _.GetCurrentInstant()).Returns(GetInstant(currentDatetimeUtc));
         _notificationOptions.StandUpTimeZone = "Europe/Paris";
-        _notificationOptions.NotificationTime = TimeOnly.Parse(notificationTime);
+        _notificationOptions.NotificationTime = TimeSpan.Parse(notificationTime);
         _tableClientMock
             .Setup(_ => _.QueryAsync<ZoomHistoryEntity>((string)null!, null, null, default))
             .Returns(AsyncPageable<ZoomHistoryEntity>.FromPages(Array.Empty<Page<ZoomHistoryEntity>>()));
@@ -105,7 +105,7 @@ public class NotificationFunctionTests
         {
             var timeZone = DateTimeZoneProviders.Tzdb[_notificationOptions.StandUpTimeZone];
             var expectedCurrentTime = this._clockMock.Object.InZone(timeZone).GetCurrentTimeOfDay().ToTimeOnly().ToTimeSpan();
-            var expectedNotificationTime = _notificationOptions.NotificationTime.ToTimeSpan();
+            var expectedNotificationTime = _notificationOptions.NotificationTime;
             _loggerMock.VerifyLog(LogLevel.Information, $"Current time is '{expectedCurrentTime}' and notification is scheduled for '{expectedNotificationTime}'");
             _tableClientMock.VerifyNoOtherCalls();
         }
@@ -113,7 +113,7 @@ public class NotificationFunctionTests
 
     [Theory]
     [MemberData(nameof(GetTestCase))]
-    public async Task Run_Succeeds(ZoomHistoryEntity[]? entities, TimeOnly startTime, TimeOnly endTime, TimeSpan minimumSharingDuration, string? notification)
+    public async Task Run_Succeeds(ZoomHistoryEntity[]? entities, TimeSpan startTime, TimeSpan endTime, TimeSpan minimumSharingDuration, string? notification)
     {
         // Arrange
         _clockMock.Setup(_ => _.GetCurrentInstant()).Returns(GetInstant("2022-08-29T02:59:00"));
@@ -122,7 +122,7 @@ public class NotificationFunctionTests
         _notificationOptions.StandUpEndTime = endTime;
         _notificationOptions.WebHook = "https://example.com/webhook";
         _notificationOptions.MinimumSharingDuration = minimumSharingDuration;
-        _notificationOptions.NotificationTime = TimeOnly.Parse("05:00:00");
+        _notificationOptions.NotificationTime = TimeSpan.Parse("05:00:00");
 
         var pages = entities == null
             ? AsyncPageable<ZoomHistoryEntity>.FromPages(Array.Empty<Page<ZoomHistoryEntity>>())
@@ -168,8 +168,8 @@ public class NotificationFunctionTests
         yield return new object?[]
         {
             null,
-            TimeOnly.Parse("10:10:00"),
-            TimeOnly.Parse("10:20:00"),
+            TimeSpan.Parse("10:10:00"),
+            TimeSpan.Parse("10:20:00"),
             TimeSpan.FromMinutes(1),
             null
         };
@@ -196,8 +196,8 @@ public class NotificationFunctionTests
         yield return new object?[]
         {
             new object[] { entity1 },
-            TimeOnly.Parse("10:10:00"),
-            TimeOnly.Parse("10:20:00"),
+            TimeSpan.Parse("10:10:00"),
+            TimeSpan.Parse("10:20:00"),
             TimeSpan.FromMinutes(1),
             "{\"text\":\"User1 was presenting the stand-up meeting today\"}"
         };
@@ -206,8 +206,8 @@ public class NotificationFunctionTests
         yield return new object?[]
         {
             new object[] { entity1 },
-            TimeOnly.Parse("10:15:00"),
-            TimeOnly.Parse("10:20:00"),
+            TimeSpan.Parse("10:15:00"),
+            TimeSpan.Parse("10:20:00"),
             TimeSpan.FromMinutes(1),
             null
         };
@@ -216,8 +216,8 @@ public class NotificationFunctionTests
         yield return new object?[]
         {
             new[] { entity1, entity2 },
-            TimeOnly.Parse("10:10:00"),
-            TimeOnly.Parse("10:20:00"),
+            TimeSpan.Parse("10:10:00"),
+            TimeSpan.Parse("10:20:00"),
             TimeSpan.FromMinutes(1),
             "{\"text\":\"User1, User2 were presenting the stand-up meeting today\"}"
         };
@@ -226,8 +226,8 @@ public class NotificationFunctionTests
         yield return new object?[]
         {
             new[] { entity1, entity2 },
-            TimeOnly.Parse("10:12:30"),
-            TimeOnly.Parse("10:17:00"),
+            TimeSpan.Parse("10:12:30"),
+            TimeSpan.Parse("10:17:00"),
             TimeSpan.FromMinutes(1),
             "{\"text\":\"User1, User2 were presenting the stand-up meeting today\"}"
         };
@@ -236,8 +236,8 @@ public class NotificationFunctionTests
         yield return new object?[]
         {
             new[] { entity1, entity2 },
-            TimeOnly.Parse("10:00:00"),
-            TimeOnly.Parse("10:30:00"),
+            TimeSpan.Parse("10:00:00"),
+            TimeSpan.Parse("10:30:00"),
             TimeSpan.FromMinutes(1),
             "{\"text\":\"User1, User2 were presenting the stand-up meeting today\"}"
         };
@@ -246,16 +246,16 @@ public class NotificationFunctionTests
         yield return new object?[]
         {
             new[] { entity1, entity2 },
-            TimeOnly.Parse("10:00:00"),
-            TimeOnly.Parse("10:13:30"),
+            TimeSpan.Parse("10:00:00"),
+            TimeSpan.Parse("10:13:30"),
             TimeSpan.FromMinutes(1),
             "{\"text\":\"User1 was presenting the stand-up meeting today\"}"
         };
         yield return new object?[]
         {
             new[] { entity1, entity2 },
-            TimeOnly.Parse("10:16:30"),
-            TimeOnly.Parse("10:30:00"),
+            TimeSpan.Parse("10:16:30"),
+            TimeSpan.Parse("10:30:00"),
             TimeSpan.FromMinutes(1),
             "{\"text\":\"User2 was presenting the stand-up meeting today\"}"
         };
@@ -264,8 +264,8 @@ public class NotificationFunctionTests
         yield return new object?[]
         {
             new[] { entity1, entity2 },
-            TimeOnly.Parse("10:10:00"),
-            TimeOnly.Parse("10:20:00"),
+            TimeSpan.Parse("10:10:00"),
+            TimeSpan.Parse("10:20:00"),
             TimeSpan.FromMinutes(2.5),
             "{\"text\":\"User2 was presenting the stand-up meeting today\"}"
         };

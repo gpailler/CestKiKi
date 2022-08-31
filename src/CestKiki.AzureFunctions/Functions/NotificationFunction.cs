@@ -95,8 +95,8 @@ public class NotificationFunction
         var timeZone = DateTimeZoneProviders.Tzdb[_options.Value.StandUpTimeZone];
         var today = _clock.InZone(timeZone).GetCurrentDate();
         var standUpDateTime = new Interval(
-            today.At(LocalTime.FromTimeOnly(_options.Value.StandUpStartTime)).InZoneStrictly(timeZone).ToInstant(),
-            today.At(LocalTime.FromTimeOnly(_options.Value.StandUpEndTime)).InZoneStrictly(timeZone).ToInstant());
+            today.At(LocalTime.FromTimeOnly(TimeOnly.FromTimeSpan(_options.Value.StandUpStartTime))).InZoneStrictly(timeZone).ToInstant(),
+            today.At(LocalTime.FromTimeOnly(TimeOnly.FromTimeSpan(_options.Value.StandUpEndTime))).InZoneStrictly(timeZone).ToInstant());
 
         return standUpDateTime;
     }
@@ -105,7 +105,7 @@ public class NotificationFunction
     {
         var timeZone = DateTimeZoneProviders.Tzdb[_options.Value.StandUpTimeZone];
         var currentTime = this._clock.InZone(timeZone).GetCurrentTimeOfDay().ToTimeOnly().ToTimeSpan();
-        var notificationTime = _options.Value.NotificationTime.ToTimeSpan();
+        var notificationTime = _options.Value.NotificationTime;
         var diff = currentTime - notificationTime;
         if (currentTime - notificationTime < TimeSpan.Zero)
         {
