@@ -40,9 +40,6 @@ internal class ZoomHookPayload
 
             public class ZoomParticipant
             {
-                [JsonPropertyName("id")]
-                public string? Id { get; set; }
-
                 [JsonPropertyName("user_id")]
                 public string? UserId { get; set; }
 
