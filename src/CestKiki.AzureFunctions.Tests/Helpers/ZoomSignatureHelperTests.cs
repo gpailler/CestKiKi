@@ -20,7 +20,21 @@ public class ZoomSignatureHelperTests
         _sut = new ZoomSignatureHelper(options);
     }
 
+    [Fact]
+    public void Construct_WithNullWebHookSecret_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var options = Mock.Of<IOptions<ZoomOptions>>(_ => _.Value.WebHookSecret == null);
+
+        // Act + Assert
+        var exception = Assert.Throws<ArgumentNullException>(() => new ZoomSignatureHelper(options));
+        Assert.Equal("WebHookSecret", exception.ParamName);
+    }
+
     [Theory]
+    [InlineData("", null, null, false)]
+    [InlineData("", null, 0L, false)]
+    [InlineData("", "v0=6CFA790F8A0984B86C8EC53848852B083D9EEC167E432A87FE7E9A6FAE1789B6", null, false)]
     [InlineData("", "v0=6CFA790F8A0984B86C8EC53848852B083D9EEC167E432A87FE7E9A6FAE1789B6", 0L, true)]
     [InlineData("", "v0=6CFA790F8A0984B86C8EC53848852B083D9EEC167E432A87FE7E9A6FAE1789B6", 1L, false)]
     [InlineData("", "v0=6CFA790F8A0984B86C8EC53848852B083D9EEC167E432A87FE7E9A6FAE1789B6foo", 0L, false)]
@@ -30,6 +44,7 @@ public class ZoomSignatureHelperTests
     [InlineData("", "v0=384D66045DF916BC3C22E258C533712A084BF0C1EA38082995A32A67064795ED", 1661138716L, true)]
     [InlineData("{}", "v0=9FD47C513997ED00759862FCFB751B26A54DB9CDD40E38336E0FE92994E66D27", 1661138716L, true)]
     [InlineData(@"{ foo = ""bar"" }", "v0=6D19A848F1DB05BA480CDE24D6B2EFB8A69234C8B38A2456C0900F928199FAB6", 1661138716L, true)]
+    [InlineData(@"{ foo = ""bâr"" }", "v0=CA8EE065F6988324CD31948E0E0195C33D4DCE68FB145FD37C06FE73092D90D8", 1661138716L, true)]
     public void ValidateSignature_Succeeds(string payload, string? signature, long? timestamp, bool expectedResult)
     {
         // Arrange

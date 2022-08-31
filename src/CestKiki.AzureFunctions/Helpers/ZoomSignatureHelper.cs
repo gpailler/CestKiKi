@@ -14,7 +14,7 @@ public class ZoomSignatureHelper : IZoomSignatureHelper
 
     public ZoomSignatureHelper(IOptions<ZoomOptions> options)
     {
-        _zoomSecret = options.Value.WebHookSecret ?? throw new ArgumentException("ZoomWebHookSecret is not set");
+        _zoomSecret = options.Value.WebHookSecret ?? throw new ArgumentNullException(nameof(ZoomOptions.WebHookSecret));
     }
 
     public bool ValidateSignature(HttpHeaders headers, string payload)
@@ -34,7 +34,7 @@ public class ZoomSignatureHelper : IZoomSignatureHelper
     private string GenerateSignature(string payload, DateTimeOffset timestamp)
     {
         var message = $"v0:{timestamp.ToUnixTimeMilliseconds()}:{payload}";
-        var hash = HMACSHA256.HashData(Encoding.ASCII.GetBytes(_zoomSecret), Encoding.ASCII.GetBytes(message));
+        var hash = HMACSHA256.HashData(Encoding.UTF8.GetBytes(_zoomSecret), Encoding.UTF8.GetBytes(message));
         var computedSignature = "v0=" + BitConverter.ToString(hash).Replace("-", "");
         return computedSignature;
     }
