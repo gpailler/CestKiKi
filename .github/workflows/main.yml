@@ -11,10 +11,12 @@ env:
   SRC_PATH: ${{ github.workspace }}\src\
   PUBLISH_PATH: ${{ github.workspace }}\publish\
   # SONAR_TOKEN: ''  # Stored in the Actions secrets
+  # AZURE_FUNCTIONAPP_NAME: '' # Stored in the Actions secrets
+  # AZURE_FUNCTIONAPP_PUBLISH_PROFILE: '' # Stored in the Actions secrets
 
 jobs:
   build:
-    name: Build and Tests ⚙️🧪
+    name: Build and Tests ⚙️🧪📦
     runs-on: windows-latest
 
     steps:
@@ -79,3 +81,23 @@ jobs:
       with:
         name: function-app
         path: ${{ env.PUBLISH_PATH }}
+
+  deploy:
+    name: Deploy to Azure 🚀🌐
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: windows-latest
+    needs: [ build ]
+
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v2
+      with:
+          name: function-app
+          path: ${{ env.PUBLISH_PATH }}
+
+    - name: Publish Azure Functions
+      uses: Azure/functions-action@v1
+      with:
+        app-name: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
+        package: '${{ env.PUBLISH_PATH }}'
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
