@@ -7,7 +7,9 @@ on:
   workflow_dispatch:
 
 env:
+  CONFIGURATION: 'Release'
   SRC_PATH: ${{ github.workspace }}\src\
+  PUBLISH_PATH: ${{ github.workspace }}\publish\
   # SONAR_TOKEN: ''  # Stored in the Actions secrets
 
 jobs:
@@ -47,16 +49,17 @@ jobs:
     - name: Run build
       run: >
         dotnet build ${{ env.SRC_PATH }}
-        --configuration Release
+        --configuration ${{ env.CONFIGURATION }}
         --no-restore
         --no-incremental
 
     - name: Run tests
       run: >
         dotnet test ${{ env.SRC_PATH }}CestKiki.AzureFunctions.Tests\
-        --configuration Release
+        --configuration ${{ env.CONFIGURATION }}
+        --no-restore
         --no-build
-        --collect:"XPlat Code Coverage" 
+        --collect:"XPlat Code Coverage"
         -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
     - name: Stop SonarScanner and send analysis
@@ -64,3 +67,15 @@ jobs:
         Move-Item "${{ env.SRC_PATH }}CestKiki.AzureFunctions.Tests\TestResults\*\coverage.opencover.xml" "${{ github.workspace }}" -Force
         $env:JAVA_HOME=$env:JAVA_HOME_17_X64 # Force JAVA_HOME environment variable (Version 11 or 17 is required by SonarScanner)
         dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+    - name: Run publish
+      run: >
+        dotnet publish ${{ env.SRC_PATH }}
+        --configuration ${{ env.CONFIGURATION }}
+        --output ${{ env.PUBLISH_PATH }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: function-app
+        path: ${{ env.PUBLISH_PATH }}
