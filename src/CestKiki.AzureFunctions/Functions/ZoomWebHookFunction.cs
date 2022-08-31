@@ -179,7 +179,7 @@ namespace CestKiki.AzureFunctions.Functions
                 .ToArrayAsync();
         }
 
-        private (DateTimeOffset timestamp, string userId, string username, string roomId, string roomName) GetZoomPayloadInfo(ZoomHookPayload zoomHookPayload)
+        private static (DateTimeOffset timestamp, string userId, string username, string roomId, string roomName) GetZoomPayloadInfo(ZoomHookPayload zoomHookPayload)
         {
             var userId = zoomHookPayload.Payload?.Object?.Participant?.UserId;
             if (userId == null)

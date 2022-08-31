@@ -27,8 +27,8 @@ public class ZoomSignatureHelperTests
         var options = Mock.Of<IOptions<ZoomOptions>>(_ => _.Value.WebHookSecret == null);
 
         // Act + Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => new ZoomSignatureHelper(options));
-        Assert.Equal("WebHookSecret", exception.ParamName);
+        var exception = Assert.Throws<ArgumentException>(() => new ZoomSignatureHelper(options));
+        Assert.Equal("WebHookSecret is null", exception.Message);
     }
 
     [Theory]

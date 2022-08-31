@@ -14,7 +14,7 @@ public class ZoomSignatureHelper : IZoomSignatureHelper
 
     public ZoomSignatureHelper(IOptions<ZoomOptions> options)
     {
-        _zoomSecret = options.Value.WebHookSecret ?? throw new ArgumentNullException(nameof(ZoomOptions.WebHookSecret));
+        _zoomSecret = options.Value.WebHookSecret ?? throw new ArgumentException($"{nameof(ZoomOptions.WebHookSecret)} is null");
     }
 
     public bool ValidateSignature(HttpHeaders headers, string payload)
