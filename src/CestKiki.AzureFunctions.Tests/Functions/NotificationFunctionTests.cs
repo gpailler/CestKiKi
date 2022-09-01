@@ -126,7 +126,7 @@ public class NotificationFunctionTests
 
         var pages = entities == null
             ? AsyncPageable<ZoomHistoryEntity>.FromPages(Array.Empty<Page<ZoomHistoryEntity>>())
-            : AsyncPageable<ZoomHistoryEntity>.FromPages(new[] {Page<ZoomHistoryEntity>.FromValues(entities, null, Mock.Of<Response>())});
+            : AsyncPageable<ZoomHistoryEntity>.FromPages(new[] { Page<ZoomHistoryEntity>.FromValues(entities, null, Mock.Of<Response>()) });
         _tableClientMock
             .Setup(_ => _.QueryAsync<ZoomHistoryEntity>((string)null!, null, null, default))
             .Returns(pages)

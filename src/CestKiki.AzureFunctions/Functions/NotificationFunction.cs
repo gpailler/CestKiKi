@@ -72,7 +72,7 @@ public class NotificationFunction
             var presenter = matchingEntities.Single().Username;
             var response = await _httpClientFactory.CreateClient().PostAsJsonAsync(
                 _options.Value.WebHook,
-                new {text = $"{presenter} was presenting the stand-up meeting today"});
+                new { text = $"{presenter} was presenting the stand-up meeting today" });
             response.EnsureSuccessStatusCode();
         }
         else if (matchingEntities.Length > 1)
@@ -80,7 +80,7 @@ public class NotificationFunction
             var presenters = string.Join(", ", matchingEntities.Select(x => x.Username));
             var response = await _httpClientFactory.CreateClient().PostAsJsonAsync(
                 _options.Value.WebHook,
-                new {text = $"{presenters} were presenting the stand-up meeting today"});
+                new { text = $"{presenters} were presenting the stand-up meeting today" });
             response.EnsureSuccessStatusCode();
         }
 

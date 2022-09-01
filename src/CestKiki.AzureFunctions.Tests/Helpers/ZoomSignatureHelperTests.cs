@@ -53,6 +53,7 @@ public class ZoomSignatureHelperTests
         {
             headers.Add("x-zm-signature", signature);
         }
+
         if (timestamp.HasValue)
         {
             headers.Add("x-zm-request-timestamp", timestamp.Value.ToString());

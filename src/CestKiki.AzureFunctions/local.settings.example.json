@@ -1,36 +1,37 @@
 {
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=<accountname>;AccountKey=<accountkey>;EndpointSuffix=core.windows.net",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    
-    // Used to validate Zoom hook signatures
-    // https://marketplace.zoom.us/docs/api-reference/webhook-reference/
-    "Zoom:WebHookSecret": "<webhooksecret>",
-    
-    // Room Id to monitor (9 digits)
-    "Zoom:MonitoredRoom": "<roomid>",
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage":
+            "DefaultEndpointsProtocol=https;AccountName=<accountname>;AccountKey=<accountkey>;EndpointSuffix=core.windows.net",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
 
-    // Cron for the notification function. Runs hourly at the same time than the NotificationTime property
-    // to send notification at the proper time regarding the selected TimeZone
-    // (A 10 minute difference is allowed between the the function execution and the notification time) 
-    "NotificationCron": "0 30 * * * *",
+        // Used to validate Zoom hook signatures
+        // https://marketplace.zoom.us/docs/api-reference/webhook-reference/
+        "Zoom:WebHookSecret": "<webhooksecret>",
 
-    // Slack WebHook endpoint to send the notification to
-    "Notification:WebHook": "https://hooks.slack.com/services/<secret>",
+        // Room Id to monitor (9 digits)
+        "Zoom:MonitoredRoom": "<roomid>",
 
-    // TimeZone used for the calculations of the StandUp and Notification Time
-    // Value from https://nodatime.org/TimeZones
-    "Notification:StandUpTimeZone": "Europe/Paris",
-    
-    // StandUp start and end time. Any person with a screen sharing overlaping this period is considered as a presenter 
-    "Notification:StandUpStartTime": "10:00:00",
-    "Notification:StandUpEndTime": "10:10:00",
-    
-    // Minimum sharing duration to be considered as a presenter
-    "Notification:MinimumSharingDuration": "00:01:00",
-    
-    // Time when notification should be delivered on Slack
-    "Notification:NotificationTime": "10:15:00"
-  }
+        // Cron for the notification function. Runs hourly at the same time than the NotificationTime property
+        // to send notification at the proper time regarding the selected TimeZone
+        // (A 10 minute difference is allowed between the the function execution and the notification time) 
+        "NotificationCron": "0 30 * * * *",
+
+        // Slack WebHook endpoint to send the notification to
+        "Notification:WebHook": "https://hooks.slack.com/services/<secret>",
+
+        // TimeZone used for the calculations of the StandUp and Notification Time
+        // Value from https://nodatime.org/TimeZones
+        "Notification:StandUpTimeZone": "Europe/Paris",
+
+        // StandUp start and end time. Any person with a screen sharing overlaping this period is considered as a presenter 
+        "Notification:StandUpStartTime": "10:00:00",
+        "Notification:StandUpEndTime": "10:10:00",
+
+        // Minimum sharing duration to be considered as a presenter
+        "Notification:MinimumSharingDuration": "00:01:00",
+
+        // Time when notification should be delivered on Slack
+        "Notification:NotificationTime": "10:15:00"
+    }
 }

@@ -48,7 +48,7 @@ public class ZoomWebHookFunctionTests
         _zoomSignatureHelperMock
             .Setup(_ => _.ValidateSignature(It.IsAny<HttpHeaders>(), It.IsAny<string>()))
             .Returns(false);
-        var requestMock = RequestHelper.CreateMock(string.Empty, new HttpHeadersCollection(new[] {new KeyValuePair<string, string>("key", "value")}));
+        var requestMock = RequestHelper.CreateMock(string.Empty, new HttpHeadersCollection(new[] { new KeyValuePair<string, string>("key", "value") }));
 
         // Act
         var response = await _sut.Run(requestMock.Object, requestMock.Object.FunctionContext);
@@ -220,7 +220,7 @@ public class ZoomWebHookFunctionTests
     {
         var asyncPageable = entity == null
             ? AsyncPageable<ZoomHistoryEntity>.FromPages(Array.Empty<Page<ZoomHistoryEntity>>())
-            : AsyncPageable<ZoomHistoryEntity>.FromPages(new[] {Page<ZoomHistoryEntity>.FromValues(new[] {entity}, null, Mock.Of<Response>())});
+            : AsyncPageable<ZoomHistoryEntity>.FromPages(new[] { Page<ZoomHistoryEntity>.FromValues(new[] { entity }, null, Mock.Of<Response>()) });
         _tableClientMock
             .Setup(_ => _.QueryAsync<ZoomHistoryEntity>(filter => filter.UserId == userId && filter.RoomId == roomId, null, null, default))
             .Returns(asyncPageable)
