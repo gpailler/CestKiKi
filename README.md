@@ -1,16 +1,18 @@
 
 # CestKiKi Azure functions
-
-## Summary
-You are running a daily stand-up meeting on Zoom with a rolling presenter and you always forgot who was presenting the day before?
-
- This project is for you!
-
 [![Azure functions workflow](https://github.com/gpailler/CestKiki/actions/workflows/main.yml/badge.svg)](https://github.com/gpailler/CestKiKi/actions/workflows/main.yml)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=gpailler_CestKiKi&metric=coverage)](https://sonarcloud.io/summary/new_code?id=gpailler_CestKiKi)
 
+
+## Summary
+You are running a daily stand-up meeting on Zoom with a rolling presenter and you always forget who was presenting the day before?
+
+This project is for you!
+
+![image](https://user-images.githubusercontent.com/3621529/188034011-41ce3b5b-8c81-42db-979e-b649b6cdf256.png)
+
 ## General design
-CestKiki runs serverless, on the cloud. It uses webhooks to receive notifications about Zoom screen sharings and stores needed infos into an Azure Table. Once a day, it queries the Table to find who was sharing his screen during the standup and send a Slack notification.
+CestKiki runs serverless, on the cloud. It uses webhooks to receive notifications about Zoom screen sharings and stores needed infos into an Azure Table. Once a day, it queries the Table to find who was sharing his screen during the stand-up and send a Slack notification.
 
 ```mermaid
 sequenceDiagram
@@ -28,7 +30,7 @@ sequenceDiagram
   end
   rect rgb(191, 223, 255)
     note right of C: Once a day
-    D->>C: Query sharing entities<br>and find who was sharing<br>his screen during the standup
+    D->>C: Query sharing entities<br>and find who was sharing<br>his screen during the stand-up
     D->>E: Send notification
   end
 ```
@@ -55,7 +57,7 @@ sequenceDiagram
   - `Notification:NotificationTime = 10:30:00`
   - `NotificationCron = 0 30 * * * *` *(The Azure function should run at the same time as the NotificationTime)*
   - `Notification:WebHook = https://hooks.slack.com/services/[...]` *(Slack Incoming Webhook configured above)*
-  - `Zoom:MonitoredRoom = 123456789` *(Zoom room id where the standup occurs)*
+  - `Zoom:MonitoredRoom = 123456789` *(Zoom room id where the stand-up occurs)*
   - `Zoom:WebHookSecret = [...]` *(Secret Token from Zoom generated above)* 
 - Edit Networking -> Inbound Traffic -> Access restriction and add the [Zoom IP ranges](https://marketplace.zoom.us/docs/api-reference/webhook-reference/#ip-addresses)
 - Deploy CestKiKi app on Azure
