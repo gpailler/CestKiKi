@@ -160,7 +160,7 @@ namespace CestKiki.AzureFunctions.Functions
             if (currentUserSharingEntities.Length == 1)
             {
                 var entity = currentUserSharingEntities.Single();
-                entity.EndSharing = zoomInfo.timestamp;
+                entity.EndSharing = zoomInfo.timestamp > entity.StartSharing ? zoomInfo.timestamp : entity.StartSharing;
 
                 _logger.LogInformation("Updating entity '{entity}'", entity.RowKey);
                 await _tableClient.UpdateEntityAsync(entity, entity.ETag, TableUpdateMode.Replace);

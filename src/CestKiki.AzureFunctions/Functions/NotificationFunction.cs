@@ -123,10 +123,12 @@ public class NotificationFunction
 
     private bool IsOverlapping(ZoomHistoryEntity entity, Interval interval)
     {
-        var sharingInterval = new Interval(
-            Instant.FromDateTimeOffset(entity.StartSharing),
-            Instant.FromDateTimeOffset(entity.EndSharing.GetValueOrDefault(DateTimeOffset.Now))
-        );
+        var sharingInterval = entity.StartSharing < entity.EndSharing.GetValueOrDefault(DateTimeOffset.Now)
+            ? new Interval(
+                Instant.FromDateTimeOffset(entity.StartSharing),
+                Instant.FromDateTimeOffset(entity.EndSharing.GetValueOrDefault(DateTimeOffset.Now))
+            )
+            : new Interval();
 
         if (sharingInterval.Duration.ToTimeSpan() < _options.Value.MinimumSharingDuration)
         {
